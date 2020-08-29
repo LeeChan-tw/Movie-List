@@ -2,11 +2,9 @@ const BASE_URL = 'https://movie-list.alphacamp.io'
 const INDEX_URL = BASE_URL + '/api/v1/movies/'
 const POSTER_URL = BASE_URL + '/posters/'
 
-const movies = []
+const movies = JSON.parse(localStorage.getItem('favoriteMovies'))
 
 const dataPanel = document.querySelector('#data-panel')
-const searchForm = document.querySelector('#search-form')
-const searchInput = document.querySelector('#search-input')
 
 function renderMovieList(data) {
     let rawHTML = ''
@@ -35,10 +33,7 @@ function renderMovieList(data) {
                 >
                   More
                 </button>
-                <button 
-                class="btn btn-info btn-add-favorite"
-                data-id="${item.id}"
-                >+</button>
+                <button class="btn btn-info btn-add-favorite">+</button>
               </div>
             </div>
           </div>
@@ -49,51 +44,10 @@ function renderMovieList(data) {
     dataPanel.innerHTML = rawHTML
 }
 
-function addToFavorite(id) {
-    const list = JSON.parse(localStorage.getItem('favoriteMovies')) || []
-    const movie = movies.find((movie) => movie.id === id)
-    if (list.some((movie) => movie.id === id)) {
-        return alert('This movie has been added as your favorite!')
-    }
-    list.push(movie)
-    localStorage.setItem('favoriteMovies', JSON.stringify(list))
-}
-
-axios.get(INDEX_URL).then((response) => {
-    movies.push(...response.data.results)
-    renderMovieList(movies)
-})
-
 dataPanel.addEventListener('click', (event) => {
     if (event.target.matches('.btn-show-movie')) {
         showMovieModal(event.target.dataset.id)
-    } else if (event.target.matches('.btn-add-favorite')) {
-        addToFavorite(Number(event.target.dataset.id))
     }
-})
-
-searchForm.addEventListener('submit', function onSearchFormSubmit(event) {
-    event.preventDefault()
-    const keyword = searchInput.value.trim().toLowerCase()
-    let filteredMovies = []
-
-    //if (!keyword.length) {
-    //    return alert('Please enter a valid string')
-    // }
-
-    filteredMovies = movies.filter((movie) => movie.title.toLowerCase().includes(keyword))
-
-    if (filteredMovies.length === 0) {
-        return alert('Cannot find movies with keyword: ' + keyword)
-    }
-
-    // for (const movie of movies) {
-    //     if (movie.title.toLowerCase().includes(keyword)) {
-    //         filteredMovies.push(movie)
-    //     }
-    // }
-
-    renderMovieList(filteredMovies)
 })
 
 function showMovieModal(id) {
@@ -109,3 +63,5 @@ function showMovieModal(id) {
         modalImage.innerHTML = `<img src="${POSTER_URL + data.image}" alt="movie-poster" class="img-fluid">`
     })
 }
+
+renderMovieList(movies)
