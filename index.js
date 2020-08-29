@@ -29,6 +29,7 @@ function renderMovieList(data) {
                   class="btn btn-primary btn-show-movie"
                   data-toggle="modal"
                   data-target="#movie-modal"
+                  data-id="${item.id}"
                 >
                   More
                 </button>
@@ -47,3 +48,23 @@ axios.get(INDEX_URL).then((response) => {
     movies.push(...response.data.results)
     renderMovieList(movies)
 })
+
+dataPanel.addEventListener('click', (event) => {
+    if (event.target.matches('.btn-show-movie')) {
+        showMovieModal(event.target.dataset.id)
+    }
+})
+
+function showMovieModal(id) {
+    const modalTitle = document.querySelector('#movie-modal-title')
+    const modalImage = document.querySelector('#movie-modal-image')
+    const modalDate = document.querySelector('#movie-modal-date')
+    const modalDescription = document.querySelector('#movie-modal-description')
+    axios.get(INDEX_URL + id).then((response) => {
+        const data = response.data.results
+        modalTitle.innerText = data.title
+        modalDate.innerText = 'Release date: ' + data.release_date
+        modalDescription.innerText = data.description
+        modalImage.innerHTML = `<img src="${POSTER_URL + data.image}" alt="movie-poster" class="img-fluid">`
+    })
+}
