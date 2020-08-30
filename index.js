@@ -1,10 +1,13 @@
 const BASE_URL = 'https://movie-list.alphacamp.io'
 const INDEX_URL = BASE_URL + '/api/v1/movies/'
 const POSTER_URL = BASE_URL + '/posters/'
+const MOVIES_PER_PAGE = 12
 
+let filteredMovies = []
 const movies = []
 
 const dataPanel = document.querySelector('#data-panel')
+const paginator = document.querySelector('#paginator')
 const searchForm = document.querySelector('#search-form')
 const searchInput = document.querySelector('#search-input')
 
@@ -49,6 +52,17 @@ function renderMovieList(data) {
     dataPanel.innerHTML = rawHTML
 }
 
+function renderPaginator(amount) {
+    const numberOfPages = Math.ceil(amount / MOVIES_PER_PAGE)
+    let rawHTML = ''
+    for (let page = 1; page <= numberOfPages; page++) {
+        rawHTML += `
+      <li class="page-item"><a class="page-link" href="#" data-page="${page}">${page}</a></li>
+      `
+    }
+    paginator.innerHTML = rawHTML
+}
+
 function addToFavorite(id) {
     const list = JSON.parse(localStorage.getItem('favoriteMovies')) || []
     const movie = movies.find((movie) => movie.id === id)
@@ -59,12 +73,7 @@ function addToFavorite(id) {
     localStorage.setItem('favoriteMovies', JSON.stringify(list))
 }
 
-axios.get(INDEX_URL).then((response) => {
-    movies.push(...response.data.results)
-    renderMovieList(movies)
-})
-
-dataPanel.addEventListener('click', (event) => {
+dataPanel.addEventListener('click', function onButtonClicked(event) {
     if (event.target.matches('.btn-show-movie')) {
         showMovieModal(event.target.dataset.id)
     } else if (event.target.matches('.btn-add-favorite')) {
@@ -72,11 +81,16 @@ dataPanel.addEventListener('click', (event) => {
     }
 })
 
+paginator.addEventListener('click', function onPaginatorClicked(event) {
+    if (event.target.matches('.page-link')) {
+        const page = getMoviesByPage(Number(event.target.dataset.page))
+        renderMovieList(page)
+    }
+})
+
 searchForm.addEventListener('submit', function onSearchFormSubmit(event) {
     event.preventDefault()
     const keyword = searchInput.value.trim().toLowerCase()
-    let filteredMovies = []
-
     //if (!keyword.length) {
     //    return alert('Please enter a valid string')
     // }
@@ -92,9 +106,16 @@ searchForm.addEventListener('submit', function onSearchFormSubmit(event) {
     //         filteredMovies.push(movie)
     //     }
     // }
-
-    renderMovieList(filteredMovies)
+    renderPaginator(filteredMovies.length)
+    renderMovieList(getMoviesByPage(1))
 })
+
+//page =>
+function getMoviesByPage(page) {
+    const startIndex = (page - 1) * MOVIES_PER_PAGE
+    const data = filteredMovies.length ? filteredMovies : movies
+    return data.slice(startIndex, startIndex + MOVIES_PER_PAGE)
+}
 
 function showMovieModal(id) {
     const modalTitle = document.querySelector('#movie-modal-title')
@@ -109,3 +130,9 @@ function showMovieModal(id) {
         modalImage.innerHTML = `<img src="${POSTER_URL + data.image}" alt="movie-poster" class="img-fluid">`
     })
 }
+
+axios.get(INDEX_URL).then((response) => {
+    movies.push(...response.data.results)
+    renderPaginator(movies.length)
+    renderMovieList(getMoviesByPage(1))
+})

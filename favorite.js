@@ -33,7 +33,7 @@ function renderMovieList(data) {
                 >
                   More
                 </button>
-                <button class="btn btn-info btn-add-favorite">+</button>
+                <button class="btn btn-danger btn-remove-favorite" data-id="${item.id}">-</button>
               </div>
             </div>
           </div>
@@ -44,9 +44,18 @@ function renderMovieList(data) {
     dataPanel.innerHTML = rawHTML
 }
 
+function removeFromFavorite(id) {
+    const movieIndex = movies.findIndex((movie) => movie.id === id)
+    movies.splice(movieIndex, 1)
+    localStorage.setItem('favoriteMovies', JSON.stringify(movies))
+    renderMovieList(movies)
+}
+
 dataPanel.addEventListener('click', (event) => {
     if (event.target.matches('.btn-show-movie')) {
         showMovieModal(event.target.dataset.id)
+    } else if (event.target.matches('.btn-remove-favorite')) {
+        removeFromFavorite(Number(event.target.dataset.id))
     }
 })
 
